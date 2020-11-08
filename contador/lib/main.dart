@@ -7,39 +7,28 @@ void main() {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Contador',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
+    return CounterProvider(
+      model: CounterModel(),
+      child: MaterialApp(
+        title: 'Contador',
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+          visualDensity: VisualDensity.adaptivePlatformDensity,
+        ),
+        home: CounterPage(title: 'Contador simple'),
       ),
-      home: CounterPage(title: 'Contador simple'),
     );
   }
 }
 
-class CounterPage extends StatefulWidget {
+class CounterPage extends StatelessWidget {
   CounterPage({Key key, this.title}) : super(key: key);
 
   final String title;
 
   @override
-  _CounterPageState createState() => _CounterPageState();
-}
-
-class _CounterPageState extends State<CounterPage> {
-  int _counter = 0;
-
-  void _increment() {
-    setState(() { _counter++; });
-  }
-
-  void _decrement() {
-    setState(() { _counter--; });
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final counter = CounterProvider.of(context);
     return Scaffold(
       body: Center(
         child: Row(
@@ -52,10 +41,11 @@ class _CounterPageState extends State<CounterPage> {
                   fontSize: Theme.of(context).textTheme.headline5.fontSize,
                 ),
               ),
-              onPressed: _decrement,
+              onPressed: counter.model.decrement,
             ),
+            // ¿ Cómo lo convierto en observador ?
             Text(
-              '$_counter',
+              '${counter.model.currentCount}',
               style: Theme.of(context).textTheme.headline4, 
             ),
             FlatButton(
@@ -65,7 +55,7 @@ class _CounterPageState extends State<CounterPage> {
                   fontSize: Theme.of(context).textTheme.headline5.fontSize,
                 ),
               ),
-              onPressed: _increment,
+              onPressed: counter.model.increment,
             ),
           ],
         ),
@@ -73,4 +63,37 @@ class _CounterPageState extends State<CounterPage> {
     );
   }
   
+}
+
+
+
+class CounterProvider extends InheritedWidget {
+  final CounterModel model;
+
+  CounterProvider({this.model, Widget child}) : super(child: child);
+
+  static CounterProvider of(BuildContext context) =>
+    context.inheritFromWidgetOfExactType(CounterProvider);
+  
+  @override
+  bool updateShouldNotify(InheritedWidget oldWidget) => true; 
+}
+
+
+
+class CounterModel {
+  // ¿ Cómo lo convierto en observable ?
+  int _counter = 0;
+
+  void increment() {
+    _counter++;
+    // ¿ Cómo notifico a los observadores ?
+  }
+
+  void decrement() {
+    _counter--;
+    // ¿ Cómo notifico a los observadores ?
+  }
+
+  int get currentCount => _counter;
 }
