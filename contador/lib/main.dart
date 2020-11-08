@@ -32,40 +32,83 @@ class CounterPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            FlatButton(
-              child: Text("-1",
-                style: TextStyle(
-                  color: Theme.of(context).errorColor,
-                  fontSize: Theme.of(context).textTheme.headline5.fontSize,
-                ),
-              ),
-              onPressed: () { context.bloc<CounterCubit>().decrement(); },
-            ),
-            BlocBuilder<CounterCubit, int>(
-              builder: (BuildContext context, state) => Text(
-                '${state}',
-                style: Theme.of(context).textTheme.headline4, 
-              ),
-            ),
-            FlatButton(
-              child: Text("+1",
-                style: TextStyle(
-                  color: Theme.of(context).accentColor,
-                  fontSize: Theme.of(context).textTheme.headline5.fontSize,
-                ),
-              ),
-              onPressed: () { context.bloc<CounterCubit>().increment(); },
-            ),
-          ],
-        ),
-      ),
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CounterPanel(),
+          CounterXtra(),
+        ]
+      )
     );
   }
-  
+}
+
+class CounterPanel extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: [
+        FlatButton(
+          child: Text("-1",
+            style: TextStyle(
+              color: Theme.of(context).errorColor,
+              fontSize: Theme.of(context).textTheme.headline5.fontSize,
+            ),
+          ),
+          onPressed: () { context.bloc<CounterCubit>().decrement(); },
+        ),
+        BlocBuilder<CounterCubit, int>(
+          builder: (BuildContext context, state) => Text(
+            '${state}',
+            style: Theme.of(context).textTheme.headline4, 
+          ),
+        ),
+        FlatButton(
+          child: Text("+1",
+            style: TextStyle(
+              color: Theme.of(context).accentColor,
+              fontSize: Theme.of(context).textTheme.headline5.fontSize,
+            ),
+          ),
+          onPressed: () { context.bloc<CounterCubit>().increment(); },
+        ),
+      ],
+    );
+  }
+}
+
+
+class CounterXtra extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        FlatButton(
+          child: Icon(
+            Icons.replay_5,
+            color: Theme.of(context).errorColor,
+          ),
+          onPressed: () { context.bloc<CounterCubit>().decrement5(); },
+        ),
+        FlatButton(
+          child: Icon(
+            Icons.replay,
+            color: Theme.of(context).errorColor,
+          ),
+          onPressed: () { context.bloc<CounterCubit>().reset(); },
+        ),
+        FlatButton(
+          child: Icon(
+            Icons.forward_5,
+            color: Theme.of(context).errorColor,
+          ),
+          onPressed: () { context.bloc<CounterCubit>().increment5(); },
+        ),
+      ],
+    );      
+  }
 }
 
 
@@ -78,6 +121,13 @@ class CounterCubit extends Cubit<int> {
 
   /// Subtract 1 from the current state.
   void decrement() { emit(state - 1); }
+
+  void reset() { emit(0); }
+
+  void decrement5() { emit(state - 5); }
+
+  void increment5() { emit(state + 5); }
+  
 }
 
 
