@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 void main() {
   runApp(MyApp());
@@ -7,8 +8,8 @@ void main() {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return CounterProvider(
-      model: CounterModel(),
+    return ChangeNotifierProvider(
+      create: (context) => CounterModel(),
       child: MaterialApp(
         title: 'Contador',
         theme: ThemeData(
@@ -28,7 +29,7 @@ class CounterPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final counter = CounterProvider.of(context);
+    final counter = Provider.of<CounterModel>(context, listen: false);
     return Scaffold(
       body: Center(
         child: Row(
@@ -41,12 +42,13 @@ class CounterPage extends StatelessWidget {
                   fontSize: Theme.of(context).textTheme.headline5.fontSize,
                 ),
               ),
-              onPressed: counter.model.decrement,
+              onPressed: counter.decrement,
             ),
-            // ¿ Cómo lo convierto en observador ?
-            Text(
-              '${counter.model.currentCount}',
-              style: Theme.of(context).textTheme.headline4, 
+            Consumer<CounterModel>(
+              builder: (context, counter, child) => Text(
+                '${counter.currentCount}',
+                style: Theme.of(context).textTheme.headline4, 
+              )
             ),
             FlatButton(
               child: Text("+1",
@@ -55,7 +57,7 @@ class CounterPage extends StatelessWidget {
                   fontSize: Theme.of(context).textTheme.headline5.fontSize,
                 ),
               ),
-              onPressed: counter.model.increment,
+              onPressed: counter.increment,
             ),
           ],
         ),
@@ -67,32 +69,18 @@ class CounterPage extends StatelessWidget {
 
 
 
-class CounterProvider extends InheritedWidget {
-  final CounterModel model;
-
-  CounterProvider({this.model, Widget child}) : super(child: child);
-
-  static CounterProvider of(BuildContext context) =>
-    context.inheritFromWidgetOfExactType(CounterProvider);
-  
-  @override
-  bool updateShouldNotify(InheritedWidget oldWidget) => true; 
-}
-
-
-
-class CounterModel {
-  // ¿ Cómo lo convierto en observable ?
+// ChangeNotifier equivale a un Obervable 
+class CounterModel with ChangeNotifier {
   int _counter = 0;
 
   void increment() {
     _counter++;
-    // ¿ Cómo notifico a los observadores ?
+    notifyListeners();
   }
 
   void decrement() {
     _counter--;
-    // ¿ Cómo notifico a los observadores ?
+    notifyListeners();
   }
 
   int get currentCount => _counter;
