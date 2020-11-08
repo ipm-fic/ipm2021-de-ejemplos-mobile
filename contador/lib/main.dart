@@ -1,5 +1,5 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 void main() {
   runApp(MyApp());
@@ -8,8 +8,8 @@ void main() {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => CounterModel(),
+    return BLoC(
+      state: CounterModel(),
       child: MaterialApp(
         title: 'Contador',
         theme: ThemeData(
@@ -29,7 +29,7 @@ class CounterPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final counter = Provider.of<CounterModel>(context, listen: false);
+    final bloc = BLoC.of(context);
     return Scaffold(
       body: Center(
         child: Row(
@@ -42,13 +42,14 @@ class CounterPage extends StatelessWidget {
                   fontSize: Theme.of(context).textTheme.headline5.fontSize,
                 ),
               ),
-              onPressed: counter.decrement,
+              onPressed: () { bloc.inCounterEvent.add(CounterEvent.decrement); },
             ),
-            Consumer<CounterModel>(
-              builder: (context, counter, child) => Text(
-                '${counter.currentCount}',
+            StreamBuilder(
+              stream: bloc.outCounter,
+              builder: (BuildContext context, AsyncSnapshot<int> snapshot) => Text(
+                '${snapshot.data}',
                 style: Theme.of(context).textTheme.headline4, 
-              )
+              ),
             ),
             FlatButton(
               child: Text("+1",
@@ -57,7 +58,7 @@ class CounterPage extends StatelessWidget {
                   fontSize: Theme.of(context).textTheme.headline5.fontSize,
                 ),
               ),
-              onPressed: counter.increment,
+              onPressed: () { bloc.inCounterEvent.add(CounterEvent.increment); },
             ),
           ],
         ),
@@ -69,18 +70,59 @@ class CounterPage extends StatelessWidget {
 
 
 
-// ChangeNotifier equivale a un Obervable 
-class CounterModel with ChangeNotifier {
+class BLoC extends InheritedWidget {
+  final BLoCData blocData;
+
+  BLoC({state, Widget child}) : this.blocData = BLoCData(state), super(child: child);
+
+  
+  static BLoCData of(BuildContext context) {
+    BLoC bloc = context.inheritFromWidgetOfExactType(BLoC) as BLoC;
+    return bloc.blocData;
+  }
+  
+  @override
+  bool updateShouldNotify(InheritedWidget oldWidget) => false;
+}
+
+class BLoCData {
+  final CounterModel _counter;
+  StreamController<CounterEvent> _inCounterEvent = StreamController<CounterEvent>();
+  StreamController<int> _outCounter = StreamController<int>();
+  
+  BLoCData(this._counter) {
+    _inCounterEvent.stream.listen(this.mapEvent);
+    _outCounter.add(_counter.currentCount);
+  }
+
+  StreamController<CounterEvent> get inCounterEvent => _inCounterEvent;
+  Stream<int> get outCounter => _outCounter.stream;
+
+  void mapEvent(CounterEvent event) {
+    switch (event) {
+      case CounterEvent.increment:
+        _counter.increment();
+        _outCounter.add(_counter.currentCount);
+        break;
+      case CounterEvent.decrement:
+        _counter.decrement();
+        _outCounter.add(_counter.currentCount);
+        break;
+    }
+  }
+}
+
+enum CounterEvent { increment, decrement }
+
+class CounterModel {
   int _counter = 0;
 
   void increment() {
     _counter++;
-    notifyListeners();
   }
 
   void decrement() {
     _counter--;
-    notifyListeners();
   }
 
   int get currentCount => _counter;
