@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:bloc/bloc.dart';
 
 void main() {
   runApp(MyApp());
@@ -8,8 +10,8 @@ void main() {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return BLoC(
-      state: CounterModel(),
+    return BlocProvider<CounterCubit>(
+      create: (_) => CounterCubit(),
       child: MaterialApp(
         title: 'Contador',
         theme: ThemeData(
@@ -29,7 +31,6 @@ class CounterPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bloc = BLoC.of(context);
     return Scaffold(
       body: Center(
         child: Row(
@@ -42,12 +43,11 @@ class CounterPage extends StatelessWidget {
                   fontSize: Theme.of(context).textTheme.headline5.fontSize,
                 ),
               ),
-              onPressed: () { bloc.inCounterEvent.add(CounterEvent.decrement); },
+              onPressed: () { context.bloc<CounterCubit>().decrement(); },
             ),
-            StreamBuilder(
-              stream: bloc.outCounter,
-              builder: (BuildContext context, AsyncSnapshot<int> snapshot) => Text(
-                '${snapshot.data}',
+            BlocBuilder<CounterCubit, int>(
+              builder: (BuildContext context, state) => Text(
+                '${state}',
                 style: Theme.of(context).textTheme.headline4, 
               ),
             ),
@@ -58,7 +58,7 @@ class CounterPage extends StatelessWidget {
                   fontSize: Theme.of(context).textTheme.headline5.fontSize,
                 ),
               ),
-              onPressed: () { bloc.inCounterEvent.add(CounterEvent.increment); },
+              onPressed: () { context.bloc<CounterCubit>().increment(); },
             ),
           ],
         ),
@@ -70,60 +70,14 @@ class CounterPage extends StatelessWidget {
 
 
 
-class BLoC extends InheritedWidget {
-  final BLoCData blocData;
+class CounterCubit extends Cubit<int> {
+  CounterCubit() : super(0);
 
-  BLoC({state, Widget child}) : this.blocData = BLoCData(state), super(child: child);
+  /// Add 1 to the current state.
+  void increment() { emit(state + 1); }
 
-  
-  static BLoCData of(BuildContext context) {
-    BLoC bloc = context.inheritFromWidgetOfExactType(BLoC) as BLoC;
-    return bloc.blocData;
-  }
-  
-  @override
-  bool updateShouldNotify(InheritedWidget oldWidget) => false;
+  /// Subtract 1 from the current state.
+  void decrement() { emit(state - 1); }
 }
 
-class BLoCData {
-  final CounterModel _counter;
-  StreamController<CounterEvent> _inCounterEvent = StreamController<CounterEvent>();
-  StreamController<int> _outCounter = StreamController<int>();
-  
-  BLoCData(this._counter) {
-    _inCounterEvent.stream.listen(this.mapEvent);
-    _outCounter.add(_counter.currentCount);
-  }
 
-  StreamController<CounterEvent> get inCounterEvent => _inCounterEvent;
-  Stream<int> get outCounter => _outCounter.stream;
-
-  void mapEvent(CounterEvent event) {
-    switch (event) {
-      case CounterEvent.increment:
-        _counter.increment();
-        _outCounter.add(_counter.currentCount);
-        break;
-      case CounterEvent.decrement:
-        _counter.decrement();
-        _outCounter.add(_counter.currentCount);
-        break;
-    }
-  }
-}
-
-enum CounterEvent { increment, decrement }
-
-class CounterModel {
-  int _counter = 0;
-
-  void increment() {
-    _counter++;
-  }
-
-  void decrement() {
-    _counter--;
-  }
-
-  int get currentCount => _counter;
-}
